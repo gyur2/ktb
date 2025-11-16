@@ -20,14 +20,14 @@ Route - Controller - Model 패턴을 적용했고, DB 대신 파이썬 `dict`를
 ## 📁 폴더 구조
 
 ```text
-community_backend/
+9week_4/
 ├── main.py
 ├── users_dict.py            # 유저 더미 데이터 (20명)
 ├── posts_dict.py            # 게시글 더미 데이터 (50개)
-├── comments_dict.py         # 댓글 더미 데이터 (랜덤 N개)
+├── comments_dict.py         # 댓글 더미 데이터 (50개 - 게시글마다 랜덤)
 │
 ├── models/
-│   └── models.py            # Model 계층: dict 읽기/쓰기 로직 (CRUD, 상세 조회 등)
+│   └── models.py            # Model 계층: dict 읽기/쓰기 로직
 │
 ├── controllers/
 │   └── controllers.py       # Controller 계층: 비즈니스 로직, 예외 처리
