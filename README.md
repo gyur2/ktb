@@ -16,3 +16,9 @@ FastAPI를 사용해 구현한 간단한 커뮤니티 백엔드입니다.
 9week/
 ├── 9week_2/
 └── 9week_4/
+10week/
+├── be_main.py
+├── fe_main.py
+├── class_indices.json
+├── model.py
+└── fruit_veg_resnet18.pt
