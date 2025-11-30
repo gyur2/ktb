@@ -39,7 +39,7 @@ GET `/predictions`
 ---
 
 ## 🗂 디렉토리 구조
-11week/
+`11week/
 │
 ├── be_main.py # FastAPI 서버 (모델 + DB + API)
 ├── fe_main.py # Streamlit 프론트엔드
@@ -52,13 +52,13 @@ GET `/predictions`
 ├── schemas.py # Pydantic 스키마 정의
 │
 └── README.md
-
+`
 ---
 
 ## 🚀 실행 방법
 ### 백엔드 서버 실행
-'''uvicorn be_main:app --reload'''
+`uvicorn be_main:app --reload`
 ### 프론트 실행
-'''streamlit run fe_main.py'''
+`streamlit run fe_main.py`
 
 
