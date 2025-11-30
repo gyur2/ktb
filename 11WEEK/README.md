@@ -39,7 +39,8 @@ GET `/predictions`
 ---
 
 ## 🗂 디렉토리 구조
-`11week/
+```text
+11week/
 │
 ├── be_main.py # FastAPI 서버 (모델 + DB + API)
 ├── fe_main.py # Streamlit 프론트엔드
@@ -52,7 +53,7 @@ GET `/predictions`
 ├── schemas.py # Pydantic 스키마 정의
 │
 └── README.md
-`
+```
 ---
 
 ## 🚀 실행 방법
