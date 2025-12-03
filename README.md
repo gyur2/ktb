@@ -13,6 +13,9 @@ FastAPI를 사용해 구현한 간단한 커뮤니티 백엔드입니다.
 ## 📁 폴더 구조
 
 ```text
-9week/
-├── 9week_2/
-└── 9week_4/
+ktb/
+├── 9week/
+|   ├── 9week_2/
+|   └── 9week_4/
+├── 10week/
+└── 11week/
