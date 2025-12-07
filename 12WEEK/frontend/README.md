@@ -19,71 +19,30 @@ FastAPI를 사용해 구현한 과일 닮은꼴 커뮤니티 사이트입니다.
   <summary>폴더 구조 보기/숨기기</summary>
   <div markdown="1">
 
-    ├── README.md
-    ├── .gitignore
-    ├── package-lock.json
-    ├── package.json
-    ├── public
-    │    ├── index.html
-    │    ├── manifest.json
-    │    └── robots.txt
-    └── src
-         ├── App.js
-         ├── App.test.js
-         ├── index.css
-         ├── index.js
-         ├── logo.svg
-         ├── reportWebVitals.js
-         ├── setupTests.js
-         ├── static.js
-         ├── components
-         │     ├── comments
-         │     │     ├── AddComment.js
-         │     │     ├── Comment.js
-         │     │     └── Comments.js
-         │     ├── modals
-         │     │     ├── DeleteCommentModal.js
-         │     │     ├── DeletePostModal.js
-         │     │     └── Modals.js
-         │     ├── posts
-         │     │     └── MiniPost.js
-         │     ├── users
-         │     │     └── UpdateProfileImage.js
-         │     ├── BackButton.js
-         │     └── Navbar.js
-         ├── pages
-         │     ├── AddPostPage.jsx
-         │     ├── LogInPage.jsx
-         │     ├── PostDetailPage.jsx
-         │     ├── PostPage.jsx
-         │     ├── SignUpPage.jsx
-         │     ├── UpdatePasswordPage.jsx
-         │     ├── UpdatePostPage.jsx
-         │     └── UpdateProfilePage.jsx
-         ├── images
-         │     ├── back.png
-         │     └── profile_img.webp
-         ├── hooks
-         │     └── useFetch.js
-         ├── utils
-         │     ├── numberToK.js
-         │     └── scroll.js
-         └── styles
-               ├── AddComment.module.css
-               ├── AddPost.module.css
-               ├── Comment.module.css
-               ├── Comments.module.css
-               ├── LogIn.module.css
-               ├── MiniPost.module.css
-               ├── Navbar.module.css
-               ├── PostDetail.module.css
-               ├── PostModal.module.css
-               ├── Posts.module.css
-               ├── SignUp.module.css
-               ├── UpdatePassword.module.css
-               ├── UpdatePost.module.css
-               ├── UpdateProfile.module.css
-               └── UserImage.module.css
+    12WEEK/
+      ├── backend/
+      │   ├── auth.py
+      │   ├── controllers.py
+      │   ├── db.py
+      │   ├── main.py
+      │   ├── models.py
+      │   ├── router.py
+      │   ├── schemas.py
+      │   ├── app.db
+      │   ├── fruit_veg_resnet18.pt
+      │   ├── model.py
+      │   └── media/
+      │       └── profile/
+      └── frontend/
+          ├── js/
+          │   ├── app.js
+          │   ├── auth.js
+          │   ├── board.js
+          │   ├── home.js
+          │   └── profile.js
+          ├── index.html
+          └── style.css
+
     </div>
   </details>
   <br/>
