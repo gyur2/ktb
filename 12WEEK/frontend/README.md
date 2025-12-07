@@ -18,7 +18,6 @@ FastAPI를 사용해 구현한 과일 닮은꼴 커뮤니티 사이트입니다.
 <details>
 <summary>폴더 구조</summary>
 <div markdown="1">
-```text
 12WEEK/
 ├── backend/
 │   ├── auth.py
@@ -42,6 +41,5 @@ FastAPI를 사용해 구현한 과일 닮은꼴 커뮤니티 사이트입니다.
     │   └── profile.js
     ├── index.html
     └── style.css
-```
 </div>
 </details>
