@@ -43,6 +43,12 @@ FastAPI를 사용해 구현한 과일 닮은꼴 커뮤니티 사이트입니다.
           ├── index.html
           └── style.css
 
-    </div>
   </details>
   <br/>
+## 서비스 화면
+`홈`
+|로그인|회원가입|홈|
+|---|---|---|
+|![로그인](https://github.com/user-attachments/assets/4a0e1aa4-f184-4140-9fcd-41fdeafebdd7)|![회원가입](https://github.com/user-attachments/assets/10897ccb-7055-46fd-9676-d705a297a236)|
+![홈](https://github.com/user-attachments/assets/b136d0d5-5443-4210-b344-51887a5f7c2c)|
+
