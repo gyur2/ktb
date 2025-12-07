@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>Fruit & Veg Classifier 🍎</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 700px;
+      margin: 40px auto;
+      padding: 0 16px;
+      background-color: #f4f4f4;
+    }
+    h1 { color: #2b7cff; }
+    .card {
+      background: #fff;
+      border-radius: 8px;
+      padding: 16px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      margin-top: 16px;
+    }
+    #preview {
+      margin-top: 12px;
+      max-width: 240px;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+      display: none;
+    }
+    button {
+      margin-top: 12px;
+      padding: 8px 16px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      background-color: #2b7cff;
+      color: white;
+      font-size: 14px;
+    }
+    button:disabled { opacity: 0.6; cursor: not-allowed; }
+    .status { margin-top: 12px; white-space: pre-wrap; }
+    .success { color: #0a7f1f; font-weight: bold; }
+    .error { color: #c0392b; font-weight: bold; }
+    .result-card {
+      margin-top: 16px;
+      padding: 12px;
+      border-radius: 8px;
+      background: #ffffff;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    }
+    .result-card h3 { margin-top: 0; margin-bottom: 6px; }
+    .result-meta {
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 8px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Fruit & Vegetable Classification</h1>
+  <p>로컬 FastAPI 서버로 이미지를 보내 과일/야채를 분류합니다.</p>
+
+  <div class="card">
+    <label for="fileInput">이미지 파일을 선택하세요 (jpg / png)</label><br />
+    <input id="fileInput" type="file" accept="image/jpeg,image/png" />
+
+    <div id="previewContainer">
+      <img id="preview" src="" alt="preview" />
+      <div id="previewCaption"></div>
+    </div>
+
+    <button id="predictBtn" type="button">Predict</button>
+
+    <!-- 상태 메시지 영역 -->
+    <div id="status" class="status"></div>
+  </div>
+
+  <!-- 결과 카드 영역 -->
+  <div id="resultsContainer"></div>
+
+  <script>
+    let BACKEND_URL;
+    if (window.location.port === "8000") {
+      // FastAPI가 index.html을 서빙하는 경우
+      BACKEND_URL = "/predict-fruit-veg";
+    } else {
+      // VSCode Live Server(보통 5500) 등으로 여는 경우
+      BACKEND_URL = "http://127.0.0.1:8000/predict-fruit-veg";
+    }
+    console.log("BACKEND_URL =", BACKEND_URL);
+
+    const fileInput = document.getElementById("fileInput");
+    const predictBtn = document.getElementById("predictBtn");
+    const previewImg = document.getElementById("preview");
+    const previewCaption = document.getElementById("previewCaption");
+    const statusDiv = document.getElementById("status");
+    const resultsContainer = document.getElementById("resultsContainer");
+
+    // 이미지 미리보기
+    fileInput.addEventListener("change", () => {
+      const file = fileInput.files[0];
+      if (!file) {
+        previewImg.style.display = "none";
+        previewCaption.textContent = "";
+        return;
+      }
+      const url = URL.createObjectURL(file);
+      previewImg.src = url;
+      previewImg.style.display = "block";
+      previewCaption.textContent = "Input Image: " + file.name;
+    });
+
+    // Predict 버튼
+    predictBtn.addEventListener("click", async () => {
+      const file = fileInput.files[0];
+      statusDiv.className = "status";
+      statusDiv.textContent = "";
+
+      if (!file) {
+        statusDiv.className = "status error";
+        statusDiv.textContent = "먼저 이미지를 업로드해주세요.";
+        return;
+      }
+
+      predictBtn.disabled = true;
+      statusDiv.textContent = "⏳ 서버에 요청 중...";
+
+      const formData = new FormData();
+      formData.append("file", file, file.name);
+
+      try {
+        console.log("POST to", BACKEND_URL);
+        const res = await fetch(BACKEND_URL, {
+          method: "POST",
+          body: formData,
+        });
+
+        statusDiv.textContent = `Status code: ${res.status}`;
+
+        if (!res.ok) {
+          const text = await res.text();
+          statusDiv.className = "status error";
+          statusDiv.textContent += "\n요청 실패";
+          console.error("에러 응답:", text);
+          return;
+        }
+
+        const data = await res.json();
+        console.log("응답 JSON:", data);
+
+        const top1Label = data.top1_label;
+        const top1Score = data.top1_score;
+        const probs = data.probabilities || {};
+
+        // 결과 카드 생성
+        const card = document.createElement("div");
+        card.className = "result-card";
+
+        const title = document.createElement("h3");
+        title.textContent = `예측 결과: ${top1Label}`;
+        card.appendChild(title);
+
+        const meta = document.createElement("div");
+        meta.className = "result-meta";
+        meta.textContent =
+          `score: ${Number(top1Score).toFixed(4)} • ` +
+          new Date().toLocaleTimeString();
+        card.appendChild(meta);
+
+        const entries = Object.entries(probs)
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 5);
+
+        if (entries.length > 0) {
+          const ul = document.createElement("ul");
+          for (const [label, prob] of entries) {
+            const li = document.createElement("li");
+            li.innerHTML =
+              `<strong>${label}</strong>: ${Number(prob).toFixed(4)}`;
+            ul.appendChild(li);
+          }
+          card.appendChild(ul);
+        }
+
+        if (resultsContainer.firstChild) {
+          resultsContainer.insertBefore(card, resultsContainer.firstChild);
+        } else {
+          resultsContainer.appendChild(card);
+        }
+
+        statusDiv.className = "status success";
+        statusDiv.textContent += "\n예측 완료!";
+      } catch (err) {
+        statusDiv.className = "status error";
+        statusDiv.textContent =
+          "요청 중 네트워크/JS 오류가 발생했습니다: " + err;
+        console.error(err);
+      } finally {
+        predictBtn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
