@@ -86,8 +86,8 @@ FastAPI를 사용해 구현한 과일 닮은꼴 커뮤니티 사이트입니다.
 
 ```
 <br/>
-## 📊 ERD (Mermaid)
 
+## 📊 ERD (Mermaid)
 ```mermaid
 erDiagram
     USER {
@@ -124,6 +124,7 @@ erDiagram
     POST ||--o{ COMMENT : has
 ```
 <br/>
+
 ## 트러블 슈팅 
 1. 이미지 업로드 시 개발 서버 무한 재로딩 현상
 2. 로컬 파일 보안 정책(Fakepath) 및 이미지 엑박 문제
