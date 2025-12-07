@@ -59,13 +59,14 @@ function renderBoardList() {
 
   listEl.innerHTML = boardState.posts
     .map((p) => {
-      const authorName = p.user_nickname || `#${p.user_id}`;
+      const authorName = p.user_nickname || `${p.user_id}`;
 
       return `
         <article class="post-card" data-id="${p.post_id}">
           <h3 class="post-title">${escapeHtml(p.title)}</h3>
           <div class="post-meta">
             <span>${escapeHtml(authorName)}</span>
+            <span>-</span>
             <span>좋아요 ${p.like_count || 0}</span>
             <span>댓글 ${p.comments ? p.comments.length : 0}</span>
             <span>조회수 ${p.view_count || 0}</span>
@@ -143,13 +144,6 @@ async function renderPostDetail() {
     return;
   }
 
-  // ✅ 동일 게시글에 대한 중복 호출 막기
-  if (currentPostId === id) {
-    console.log("[renderPostDetail] same post, skip:", id);
-    
-  }
-  currentPostId = id;
-
   console.log("[renderPostDetail] fetch /posts/" + id);
 
   app.innerHTML = `
@@ -176,7 +170,7 @@ async function renderPostDetail() {
         (c) => `
         <div class="comment" data-cid="${c.comment_id}">
           <div class="comment-top">
-            <span class="comment-author">#${c.user_id}</span>
+            <span class="comment-author">${c.user_nickname}</span>
             ${
               user && user.user_id === c.user_id
                 ? `<button class="text-btn small edit-comment">수정</button>`
@@ -208,7 +202,7 @@ async function renderPostDetail() {
   </div>
 
   ${data.image
-      ? `<img src="${escapeHtml(data.image)}" class="post-detail-image" />`
+     ? `<img src="${API_BASE}${escapeHtml(data.image)}" class="post-detail-image" />`
       : ""
   }
 
@@ -232,8 +226,14 @@ async function renderPostDetail() {
     </div>
 
     <div class="comment-form">
-      <textarea id="commentInput" rows="3" placeholder="댓글을 남겨보세요."></textarea>
-      <button class="primary-btn" id="btnAddComment">댓글 등록</button>
+      <textarea
+        id="commentInput"
+        class="textarea"
+        rows="3"
+        placeholder="댓글을 남겨보세요."></textarea>
+      <div class="comment-form-actions">
+        <button class="primary-btn" id="btnAddComment">댓글 등록</button>
+      </div>
     </div>
   </section>
 `;
@@ -345,7 +345,7 @@ async function renderPostDetail() {
 }
 
 // =============================
-// 게시글 작성 화면
+// 게시글 작성 화면 (수정 완료)
 // =============================
 function renderPostWrite() {
   if (!requireLogin()) return;
@@ -364,25 +364,77 @@ function renderPostWrite() {
           <textarea id="writeContent" rows="8" placeholder="내용을 입력하세요."></textarea>
         </div>
         <div class="form-group">
-          <label>이미지 (URL)</label>
-          <input type="text" id="writeImage" placeholder="이미지 URL (선택)" />
+          <label>이미지</label>
+          <input type="file" id="writeImage" accept="image/*" />
+          <div class="image-preview-wrapper" style="margin-top:8px;">
+            <img id="writeImagePreview" class="image-preview" style="display:none; max-width:100%; border-radius:8px;" />
+          </div>
         </div>
-        <button class="primary-btn full" id="btnSubmitPost">완료</button>
-        <button class="text-btn" id="btnCancelWrite">취소</button>
+        <button type="button" class="primary-btn full" id="btnSubmitPost">완료</button>
+        <button type="button" class="text-btn" id="btnCancelWrite">취소</button>
       </section>
     </main>
   `;
 
   bindHeaderEvents();
 
+  // --- 변수 설정 ---
+  let uploadedImageUrl = null; // ★ 서버에서 받은 진짜 이미지 주소를 저장할 변수
+  const fileInput = document.getElementById("writeImage");
+  const previewEl = document.getElementById("writeImagePreview");
+
+  // --- 취소 버튼 ---
   document.getElementById("btnCancelWrite").addEventListener("click", () => {
     navigate("#board");
   });
 
+  // --- [1단계] 파일 선택 시: 미리보기 + 서버 업로드 ---
+  fileInput.addEventListener("change", async (e) => {
+    const file = e.target.files[0];
+    
+    if (file) {
+      // 1-1. 화면에 미리보기 (FileReader 사용)
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        previewEl.src = event.target.result;
+        previewEl.style.display = "block";
+      };
+      reader.readAsDataURL(file);
+
+      // 1-2. ★ 서버로 실제 파일 전송 (/upload/image)
+      try {
+        const formData = new FormData();
+        formData.append("file", file);
+
+        // 이미지 업로드는 isFile=true로 보냄
+        const res = await apiRequest("/upload/image", "POST", formData, true);
+        
+        // 서버가 돌려준 진짜 URL 저장 (예: /media/post_images/uuid.jpg)
+        uploadedImageUrl = res.url || (res.data && res.data.url);
+        console.log("이미지 업로드 성공, URL:", uploadedImageUrl);
+
+      } catch (err) { // 변수명 err로 통일
+        console.error("업로드 실패:", err);
+        alert("이미지 업로드에 실패했습니다.");
+        // 실패 시 미리보기 감추기
+        previewEl.style.display = "none";
+        fileInput.value = "";
+      }
+    } else {
+        // 파일 선택 취소 시 초기화
+        previewEl.src = "";
+        previewEl.style.display = "none";
+        uploadedImageUrl = null;
+    }
+  });
+  
+  // --- [2단계] 완료 버튼: 게시글 정보 전송 (/posts) ---
   document.getElementById("btnSubmitPost").addEventListener("click", async () => {
     const title = document.getElementById("writeTitle").value.trim();
     const content = document.getElementById("writeContent").value.trim();
-    const image = document.getElementById("writeImage").value.trim();
+    
+    // ★ 여기서 .value가 아니라 아까 저장해둔 URL 변수(uploadedImageUrl)를 사용해야 합니다!
+    const image = uploadedImageUrl; 
 
     if (!title || !content) {
       alert("제목과 내용을 모두 입력해주세요.");
@@ -391,12 +443,20 @@ function renderPostWrite() {
 
     try {
       const body = { title, content, image: image || null };
-      const res = await apiRequest("/posts", "POST", body);
+      
+      // ★ 게시글 작성은 JSON이므로 isFile=false(기본값)로 보내야 합니다. (4번째 인자 생략)
+      const res = await apiRequest("/posts", "POST", body); 
+      
       const postId = res.data?.post_id || res.post_id;
+      
       alert("게시글이 등록되었습니다.");
       if (postId) navigate(`#post?id=${postId}`);
       else navigate("#board");
-    } catch (e) {}
+
+    } catch (e) { // 여기서는 e를 사용
+      console.error("게시글 등록 실패:", e);
+      // alert는 apiRequest에서 띄우므로 생략 가능하지만 필요시 추가
+    }
   });
 }
 
@@ -427,13 +487,12 @@ async function renderPostEdit() {
     const res = await apiRequest(`/posts/${id}`, "GET");
     const data = res.data || res;
 
+    // 여기서 수정 폼 표시
     document.getElementById("postEditContainer").innerHTML = `
       <h2>게시글 수정</h2>
       <div class="form-group">
         <label>제목 *</label>
-        <input type="text" id="editTitle" value="${escapeHtml(
-          data.title
-        )}" />
+        <input type="text" id="editTitle" value="${escapeHtml(data.title)}" />
       </div>
       <div class="form-group">
         <label>내용 *</label>
@@ -442,23 +501,61 @@ async function renderPostEdit() {
         )}</textarea>
       </div>
       <div class="form-group">
-        <label>이미지 (URL)</label>
-        <input type="text" id="editImage" value="${escapeHtml(
-          data.image || ""
-        )}" />
+        <label>이미지</label>
+        <input type="file" id="editImageFile" accept="image/*" />
+        <div class="image-preview-wrapper" style="margin-top:8px;">
+          ${
+            data.image
+              ? `<img src="${API_BASE}${escapeHtml(
+                  data.image
+                )}" id="editImagePreview" class="image-preview" />`
+              : `<img id="editImagePreview" class="image-preview" style="display:none;" />`
+          }
+        </div>
       </div>
       <button class="primary-btn full" id="btnUpdatePost">수정하기</button>
       <button class="text-btn" id="btnCancelEdit">취소</button>
     `;
 
+    // 업로드된 이미지 URL을 저장할 변수 (초기값: 기존 이미지)
+    let uploadedImageUrl = data.image || null;
+
+    const fileInput = document.getElementById("editImageFile");
+    const previewEl = document.getElementById("editImagePreview");
+
+    // 파일 선택 시 업로드 + 미리보기
+    if (fileInput) {
+      fileInput.addEventListener("change", async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append("file", file);
+
+        try {
+          // 업로드 API는 실제 엔드포인트에 맞게 수정
+          const res = await apiRequest("/upload/image", "POST", formData, true);
+          const url = res.data?.url || res.url;
+
+          uploadedImageUrl = url;
+          previewEl.src = url;
+          previewEl.style.display = "block";
+        } catch (err) {
+          console.error(err);
+          alert("이미지 업로드에 실패했습니다.");
+        }
+      });
+    }
+
+    // 취소 버튼
     document.getElementById("btnCancelEdit").addEventListener("click", () => {
       navigate(`#post?id=${id}`);
     });
 
+    // 수정하기 버튼
     document.getElementById("btnUpdatePost").addEventListener("click", async () => {
       const title = document.getElementById("editTitle").value.trim();
       const content = document.getElementById("editContent").value.trim();
-      const image = document.getElementById("editImage").value.trim();
 
       if (!title || !content) {
         alert("제목과 내용을 모두 입력해주세요.");
@@ -469,13 +566,17 @@ async function renderPostEdit() {
         await apiRequest(`/posts/${id}`, "PATCH", {
           title,
           content,
-          image: image || null,
+          image: uploadedImageUrl || null,   // 여기서 URL 사용
         });
         alert("수정되었습니다.");
         navigate(`#post?id=${id}`);
-      } catch (e) {}
+      } catch (e) {
+        console.error(e);
+        alert("수정에 실패했습니다.");
+      }
     });
   } catch (e) {
+    console.error(e);
     document.getElementById("postEditContainer").innerHTML =
       "<p class='error-text'>게시글 정보를 불러오지 못했습니다.</p>";
   }

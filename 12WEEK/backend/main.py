@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -17,7 +19,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.mount("/media", StaticFiles(directory="media"), name="media")
+BASE_DIR = Path(__file__).resolve().parent    
+MEDIA_DIR = BASE_DIR / "media"              
+MEDIA_DIR.mkdir(exist_ok=True)        
+UPLOAD_DIR = Path("static/uploads") 
+UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+        
+
+app.mount("/media", StaticFiles(directory=str(MEDIA_DIR)), name="media")
+
 
 @app.get("/health")
 def health_check():

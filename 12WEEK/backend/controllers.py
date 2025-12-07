@@ -55,19 +55,10 @@ class ToggleLikeRequest(BaseModel):
 # ========== 유저 ==========
 
 def signup_controller(db: Session, body: SignupRequest):
-    # 이메일 중복
-    existing_email = db.query(User).filter(User.email == body.email).first()
-    if existing_email:
-        raise HTTPException(status_code=400, detail="email_duplicate")
-
-    # 닉네임 중복
-    existing_nickname = db.query(User).filter(User.nickname == body.nickname).first()
-    if existing_nickname:
-        raise HTTPException(status_code=400, detail="nickname_duplicate")
 
     user = User(
         email=body.email,
-        password=body.password,  # 실제 서비스라면 해시 필요
+        password=body.password, 
         nickname=body.nickname,
         profile_image=body.profile_image,
     )
@@ -81,7 +72,7 @@ def login_controller(db, body: LoginRequest):
     user = db.query(User).filter(User.email == body.email).first()
 
     if user is None or user.password != body.password:
-        raise HTTPException(status_code=401, detail="invalid_credentials")
+        raise HTTPException(status_code=401, detail="아이디 또는 비밀번호가 올바르지 않습니다")
 
     access_token = create_access_token({"user_id": user.user_id})
 
@@ -211,12 +202,7 @@ def post_detail_controller(db: Session, post_id: int):
     post = db.query(Post).filter(Post.post_id == post_id).first()
     if post is None:
         raise HTTPException(status_code=404, detail="post_not_found")
-
-    # [수정] 개발 환경 무한 새로고침 방지를 위해 조회수 증가 로직 주석 처리
-    # post.view_count = (post.view_count or 0) + 1
-    # db.commit()
-    # db.refresh(post)
-
+    post_user = db.query(User).filter(User.user_id == post.user_id).first()
     comments = (
         db.query(Comment)
         .filter(Comment.post_id == post_id)
@@ -224,18 +210,22 @@ def post_detail_controller(db: Session, post_id: int):
         .all()
     )
 
-    comment_dicts = [
-        {
-            "comment_id": c.comment_id,
-            "user_id": c.user_id,
-            "content": c.content,
-        }
-        for c in comments
-    ]
+    comment_dicts = []
+    for c in comments:
+        comment_user = db.query(User).filter(User.user_id == c.user_id).first()
+        comment_dicts.append(
+            {
+                "comment_id": c.comment_id,
+                "user_id": c.user_id,
+                "user_nickname": comment_user.nickname if comment_user else None,
+                "content": c.content,
+            }
+        )
 
     detail = {
         "post_id": post.post_id,
         "user_id": post.user_id,
+        "user_nickname": post_user.nickname if post_user else None,
         "title": post.title,
         "content": post.content,
         "image": post.image,

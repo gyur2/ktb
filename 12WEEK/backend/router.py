@@ -4,6 +4,8 @@ import json
 import numpy as np
 import os
 from typing import Optional, List, Dict
+import uuid
+from pathlib import Path
 
 from fastapi import APIRouter, Query, Depends, UploadFile, File, Form, HTTPException
 from pydantic import BaseModel
@@ -43,7 +45,10 @@ from controllers import (
 )
 
 # ----- 경로 설정 -----
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+BASE_DIR = Path(__file__).resolve().parent        # backend/
+MEDIA_DIR = BASE_DIR / "media"
+UPLOAD_DIR = MEDIA_DIR / "post_images"            # 게시글용 이미지 폴더
+UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 MODEL_PATH = os.path.join(BASE_DIR, "fruit_veg_resnet18.pt")
 LABEL_PATH = os.path.join(BASE_DIR, "class_indices.json")
 
@@ -106,11 +111,11 @@ async def signup(
     # 이메일/닉네임 중복 체크
     existing_email = db.query(User).filter(User.email == email).first()
     if existing_email:
-      raise HTTPException(status_code=400, detail="email_duplicate")
+      raise HTTPException(status_code=400, detail="이메일이 중복되었습니다")
 
     existing_nick = db.query(User).filter(User.nickname == nickname).first()
     if existing_nick:
-      raise HTTPException(status_code=400, detail="nickname_duplicate")
+      raise HTTPException(status_code=400, detail="닉네임이 중복되었습니다")
 
     # 프로필 이미지 저장
     file_path = None
@@ -168,6 +173,25 @@ def update_password(
 
 # ========== 게시글 ==========
 
+@router.post("/upload/image")
+async def upload_image(file: UploadFile = File(...)):
+    if not file:
+        raise HTTPException(status_code=400, detail="no_file")
+
+    ext = Path(file.filename).suffix or ".jpg"
+    filename = f"{uuid.uuid4().hex}{ext}"
+    filepath = UPLOAD_DIR / filename
+
+    # 실제 파일 저장
+    with open(filepath, "wb") as f:
+        f.write(await file.read())
+
+    # 브라우저에서 바로 쓸 URL (main.py에서 /media 가 media/ 로 mount 됨)
+    url = f"/media/post_images/{filename}"
+    return {"url": url}
+
+
+    
 @router.post("/posts")
 def create_post(
     body: CreatePostRequest,

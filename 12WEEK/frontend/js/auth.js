@@ -98,7 +98,6 @@ function renderSignup() {
         <div class="form-group">
           <label>이메일</label>
           <input type="email" id="signupEmail" placeholder="example@email.com" />
-          <small class="hint">예) example@example.com</small>
         </div>
 
         <div class="form-group">

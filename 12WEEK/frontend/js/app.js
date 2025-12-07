@@ -10,9 +10,9 @@ const routes = {
   "#login": renderLogin,
   "#signup": renderSignup,
   "#board": renderBoard,
-  "#post": renderPostDetail,       // #post?id=1
+  "#post": renderPostDetail,      
   "#post-write": renderPostWrite,
-  "#post-edit": renderPostEdit,    // #post-edit?id=1
+  "#post-edit": renderPostEdit,  
   "#profile-edit": renderProfileEdit,
   "#password-edit": renderPasswordEdit,
 };
@@ -47,49 +47,44 @@ function navigate(path) {
 // 공통 API 래퍼
 // =============================
 const API_BASE = "http://localhost:8000"; // FastAPI 주소
-
 async function apiRequest(url, method = "GET", body = null, isFile = false) {
   const headers = {};
-
-  // 파일 업로드가 아니면 JSON 헤더
-  if (!isFile) {
-    headers["Content-Type"] = "application/json";
-  }
-
-  // ✅ 여기서 토큰을 읽어서 Authorization 헤더 추가
   const token = localStorage.getItem("access_token");
   if (token) {
     headers["Authorization"] = `Bearer ${token}`;
   }
 
-  try {
-    const res = await fetch(API_BASE + url, {
-      method,
-      headers,
-      body: isFile ? body : body ? JSON.stringify(body) : null,
-    });
-
-    let data = {};
-    try {
-      data = await res.json();
-    } catch (_) {
-      // body 없는 응답일 수 있음
-    }
-
-    if (!res.ok) {
-      const msg =
-        (data && (data.message || data.detail)) ||
-        "요청 처리 중 오류가 발생했습니다.";
-      alert(msg);
-      throw new Error(msg);
-    }
-
-    return data;
-  } catch (err) {
-    console.error("API ERROR:", err);
-    throw err;
+  if (!isFile) {
+    headers["Content-Type"] = "application/json";
   }
+
+  const options = {
+    method,
+    headers,
+  };
+
+  if (body) {
+    options.body = isFile ? body : JSON.stringify(body);
+  }
+
+  const res = await fetch(API_BASE + url, options);
+
+  let data = {};
+  try {
+    data = await res.json();
+  } catch (_) {}
+
+  if (!res.ok) {
+    const msg =
+      (data && (data.message || data.detail)) ||
+      "요청 처리 중 오류가 발생했습니다.";
+    alert(msg);
+    throw new Error(msg);
+  }
+
+  return data;
 }
+
 
 
 // =============================

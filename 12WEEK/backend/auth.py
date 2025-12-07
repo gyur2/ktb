@@ -34,12 +34,12 @@ def get_current_user(
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         user_id = payload.get("user_id")
     except jwt.ExpiredSignatureError:
-        raise HTTPException(status_code=401, detail="token_expired")
+        raise HTTPException(status_code=401, detail="토큰이 만료되었습니다. 다시 로그인해주십시오")
     except jwt.InvalidTokenError:
-        raise HTTPException(status_code=401, detail="invalid_token")
+        raise HTTPException(status_code=401, detail="틀린 토큰입니다.")
 
     user = db.query(User).filter(User.user_id == user_id).first()
     if user is None:
-        raise HTTPException(status_code=401, detail="user_not_found")
+        raise HTTPException(status_code=401, detail="사용자를 찾을 수 없습니다.")
 
     return user
