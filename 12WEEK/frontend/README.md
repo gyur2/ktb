@@ -19,29 +19,14 @@ FastAPI를 사용해 구현한 과일 닮은꼴 커뮤니티 사이트입니다.
   <summary>폴더 구조 보기/숨기기</summary>
   <div markdown="1">
 
-    12WEEK/
-      ├── backend/
-      │   ├── auth.py
-      │   ├── controllers.py
-      │   ├── db.py
-      │   ├── main.py
-      │   ├── models.py
-      │   ├── router.py
-      │   ├── schemas.py
-      │   ├── app.db
-      │   ├── fruit_veg_resnet18.pt
-      │   ├── model.py
-      │   └── media/
-      │       └── profile/
-      └── frontend/
-          ├── js/
-          │   ├── app.js
-          │   ├── auth.js
-          │   ├── board.js
-          │   ├── home.js
-          │   └── profile.js
-          ├── index.html
-          └── style.css
+    ├── js/
+    |  ├── app.js
+    |  ├── auth.js
+    |  ├── board.js
+    |  ├── home.js
+    |  └── profile.js
+    ├── index.html
+    └── style.css
 
   </details>
   <br/>
