@@ -11,7 +11,7 @@ FastAPI를 사용해 구현한 과일 닮은꼴 커뮤니티 사이트입니다.
 - Vanilla js
   
 ## 백엔드
-- 
+- <a href="https://github.com/gyur2/ktb/tree/main/12WEEK/backend"Backend Github</a>
 ---
 
 ## 폴더 구조
